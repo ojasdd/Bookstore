@@ -2,40 +2,53 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'your-django-app:latest'
-        COMPOSE_FILE = 'docker-compose.yml'
+        DJANGO_SETTINGS_MODULE = 'bookstore.settings'
     }
 
     stages {
-        stage('Clone Repo') {
+        stage('Clone Repository') {
             steps {
-                git 'https://github.com/your-username/your-django-repo.git'
+                checkout scm
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh 'docker-compose build'
-                }
+                sh 'docker-compose build'
             }
         }
 
-        stage('Run Migrations & Collect Static') {
+        stage('Apply Migrations') {
             steps {
-                script {
-                    sh 'docker-compose run web python manage.py migrate'
-                    sh 'docker-compose run web python manage.py collectstatic --noinput'
-                }
+                sh 'docker-compose run web python manage.py migrate'
             }
         }
 
-        stage('Deploy') {
+        stage('Run Tests') {
             steps {
-                script {
-                    sh 'docker-compose up -d'
-                }
+                sh 'docker-compose run web python manage.py test'
             }
+        }
+
+        stage('Collect Static Files') {
+            steps {
+                sh 'docker-compose run web python manage.py collectstatic --noinput'
+            }
+        }
+
+        stage('Start Application') {
+            steps {
+                sh 'docker-compose up -d'
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo '❌ Build Failed'
+        }
+        success {
+            echo '✅ Bookstore App Deployed Successfully'
         }
     }
 }
