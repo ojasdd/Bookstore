@@ -1,0 +1,11 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<h2>Custom Admin Dashboard</h2>
+<p>Welcome, {{ user.username }}!</p>
+
+<ul>
+  <li><a href="{% url 'book-list' %}">Manage Books</a></li>
+  <li><a href="#">View Orders (Coming Soon)</a></li>
+  <!-- Add more admin features -->
+</ul>
+{% endblock %}
