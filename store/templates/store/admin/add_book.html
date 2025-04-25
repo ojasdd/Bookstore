@@ -1,0 +1,25 @@
+<!-- store/templates/store/add_book.html -->
+<h1>Add New Book</h1>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <label>Title:</label>
+    <input type="text" name="title" required><br>
+
+    <label>Author:</label>
+    <select name="author">
+        {% for author in authors %}
+            <option value="{{ author.id }}">{{ author.name }}</option>
+        {% endfor %}
+    </select><br>
+
+    <label>Price:</label>
+    <input type="number" name="price" step="0.01" required><br>
+
+    <label>Stock:</label>
+    <input type="number" name="stock" required><br>
+
+    <button type="submit">Add Book</button>
+</form>
+

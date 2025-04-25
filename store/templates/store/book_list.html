@@ -1,13 +1,1 @@
-<h1>All Books</h1>
-<ul>
-  {% for book in object_list %}
-    <li>
-      {{ book.title }} by {{ book.author }} - ₹{{ book.price }}
-      <form method="post" action="{% url 'add-to-cart' book.pk %}">
-        {% csrf_token %}
-        <button type="submit">Add to Cart</button>
-      </form>
-    </li>
-  {% endfor %}
-</ul>
-<a href="{% url 'view-cart' %}">View Cart</a>
+<!DOCTYPE html> <html> <head> <title>Bookstore</title> <style> .nav-bar { display: flex; justify-content: space-between; align-items: center; background-color: #f5f5f5; padding: 10px 20px; } .nav-bar a { text-decoration: none; margin-left: 15px; color: #333; font-weight: bold; } </style> </head> <body> <div class="nav-bar"> <div><h2>Bookstore</h2></div> <div> <a href="{% url 'book-list' %}">Books</a> <a href="{% url 'view-cart' %}">Cart</a> {% if user.is_authenticated %} <a href="{% url 'account-settings' %}">Account</a> {% else %} <a href="{% url 'login' %}">Login</a> {% endif %} </div> </div> <h1>All Books</h1> <ul> {% for book in books %} <li> {{ book.title }} by {{ book.author }} – ₹{{ book.price }} <form method="post" action="{% url 'add-to-cart' book.pk %}"> {% csrf_token %} <button type="submit">Add to Cart</button> </form> </li> {% empty %} <li>No books available.</li> {% endfor %} </ul> </body> </html>
