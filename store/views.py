@@ -28,39 +28,72 @@ from .models import Book # Replace with your actual models
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Book, Author
 
-def admin_dashboard(request):
-    return render(request, 'store/admin/dashboard.html')
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Book, Author
 
-def manage_books(request):
-    books = Book.objects.all()
-    return render(request, 'store/admin/book_list.html', {'books': books})
+# Decorator to check if user is a superuser
+from django.contrib.auth.decorators import user_passes_test, login_required
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse_lazy
+from .models import Book, Author
 
-def add_book(request):
-    if request.method == 'POST':
+# Decorator for class-based views
+def superuser_required(view_func):
+    decorated_view_func = method_decorator(user_passes_test(is_superuser))(view_func)
+    return decorated_view_func
+
+# Check if user is superuser
+def is_superuser(user):
+    return user.is_superuser
+
+
+@method_decorator(user_passes_test(is_superuser), name='dispatch')
+class AdminDashboardView(TemplateView):
+    template_name = 'store/admin/dashboard.html'
+
+
+@method_decorator(user_passes_test(is_superuser), name='dispatch')
+class ManageBooksView(ListView):
+    model = Book
+    template_name = 'store/admin/book_list.html'
+    context_object_name = 'books'
+
+
+@method_decorator(user_passes_test(is_superuser), name='dispatch')
+class AddBookView(View):
+    def get(self, request):
+        return render(request, 'store/admin/book_form.html')
+
+    def post(self, request):
         title = request.POST['title']
-        author_name = request.POST['author']  # Text input for author name
+        author_name = request.POST['author']
         price = request.POST['price']
         stock = request.POST['stock']
 
-        # Check if author exists, otherwise create new author
         author, created = Author.objects.get_or_create(name=author_name)
 
-        # Create the book
         Book.objects.create(
             title=title,
             author=author,
             price=price,
             stock=stock
         )
-        return redirect('manage_books')  # Redirect to the books management page
-    
-    # For GET request, render the form
-    return render(request, 'store/admin/book_form.html')
+        return redirect('manage_books')
 
-def edit_book(request, book_id):
-    book = get_object_or_404(Book, pk=book_id)
-    authors = Author.objects.all()
-    if request.method == 'POST':
+
+@method_decorator(user_passes_test(is_superuser), name='dispatch')
+class EditBookView(View):
+    def get(self, request, book_id):
+        book = get_object_or_404(Book, pk=book_id)
+        authors = Author.objects.all()
+        return render(request, 'store/admin/book_form.html', {'book': book, 'authors': authors})
+
+    def post(self, request, book_id):
+        book = get_object_or_404(Book, pk=book_id)
         book.title = request.POST['title']
         author_id = request.POST['author']
         book.author = get_object_or_404(Author, pk=author_id)
@@ -68,22 +101,27 @@ def edit_book(request, book_id):
         book.stock = request.POST['stock']
         book.save()
         return redirect('manage_books')
-    return render(request, 'store/admin/book_form.html', {'book': book, 'authors': authors})
-
-def delete_book(request, book_id):
-    book = get_object_or_404(Book, pk=book_id)
-    book.delete()
-    return redirect('manage_books')
 
 
-def custom_admin_dashboard(request):
-    books = Book.objects.all()
-    return render(request, "store/admin_dashboard.html", {"books": books})
+@method_decorator(user_passes_test(is_superuser), name='dispatch')
+class DeleteBookView(View):
+    def post(self, request, book_id):
+        book = get_object_or_404(Book, pk=book_id)
+        book.delete()
+        return redirect('manage_books')
 
 
-@login_required
-def account_settings(request):
-    return render(request, 'store/account_settings.html')
+@method_decorator(user_passes_test(is_superuser), name='dispatch')
+class CustomAdminDashboardView(View):
+    def get(self, request):
+        books = Book.objects.all()
+        return render(request, "store/admin_dashboard.html", {"books": books})
+
+
+@method_decorator(login_required, name='dispatch')
+class AccountSettingsView(TemplateView):
+    template_name = 'store/account_settings.html'
+
 
 
 class CustomLogoutView(LogoutView):
