@@ -42,13 +42,18 @@ from django.urls import reverse_lazy
 from .models import Book, Author
 
 # Decorator for class-based views
-def superuser_required(view_func):
-    decorated_view_func = method_decorator(user_passes_test(is_superuser))(view_func)
-    return decorated_view_func
+from django.utils.decorators import method_decorator
+from django.contrib.auth.mixins import UserPassesTestMixin
 
 # Check if user is superuser
 def is_superuser(user):
     return user.is_superuser
+
+# Class-based permission mixin
+class SuperuserRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        return is_superuser(self.request.user)
+
 
 
 @method_decorator(user_passes_test(is_superuser), name='dispatch')
